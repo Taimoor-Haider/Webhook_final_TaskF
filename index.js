@@ -7,7 +7,7 @@ import messageRouter from "./route/messageRoute.js";
 import pipelineRoutes from "./route/pipelineRoute.js";
 import sourceRoutes from "./route/sourceRoute.js";
 import destinationRoutes from "./route/destinationRoute.js";
-
+import webhookRoutes from "./route/webhookRoute.js";
 const corsOptions = {
   origin: "*",
   credential: true,
@@ -32,7 +32,7 @@ app.use("/api", messageRouter);
 app.use("/api", pipelineRoutes);
 app.use("/api", sourceRoutes);
 app.use("/api", destinationRoutes);
-
+app.use("/api", webhookRoutes);
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });

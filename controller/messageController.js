@@ -1,29 +1,41 @@
 import axios from "axios";
 import Webhook from "../models/messageModel.js";
-
-const WEBHOOK_URL =
-  "https://app.whistleit.io/api/webhooks/66a9d386d375c861d232f207";
-
+import WebhookURL from "../models/webhookModel.js";
 export const addMessageViaWebhook = async (message) => {
   const { pretext, title, text, author_name } = message;
 
   try {
-    // Send a POST request to the webhook URL
-    const response = await axios.post(WEBHOOK_URL, {
-      pretext,
-      title,
-      text,
-      author_name,
-    });
-    console.log("Response is");
-    console.log(response);
+    // Fetch all webhook URLs from the database
+    const webhooks = await WebhookURL.find();
 
-    // Check if the response status is 200
-    if (response.status !== 200) {
-      console.error("Webhook response error:", response.data);
+    // Iterate over each webhook URL and send the POST request
+    for (const webhook of webhooks) {
+      try {
+        const response = await axios.post(webhook.webhook_url, {
+          pretext,
+          title,
+          text,
+          author_name,
+        });
+
+        console.log(`Response from ${webhook.webhook_url}:`, response);
+
+        // Check if the response status is 200
+        if (response.status !== 200) {
+          console.error(
+            `Webhook response error from ${webhook.webhook_url}:`,
+            response.data
+          );
+        }
+      } catch (error) {
+        console.error(
+          `Error sending message to ${webhook.webhook_url}:`,
+          error
+        );
+      }
     }
 
-    // Create a new Webhook document
+    // Create a new Webhook document (optional, if you want to save the message)
     const webhook = new Webhook({
       pretext,
       title,
@@ -35,7 +47,7 @@ export const addMessageViaWebhook = async (message) => {
     // Save the webhook data to the database
     await webhook.save();
   } catch (error) {
-    console.error("Error processing webhook:", error);
+    console.error("Error processing webhooks:", error);
   }
 };
 
@@ -56,7 +68,6 @@ export const searchMessagesByAuthorName = async (req, res) => {
     res.status(500).send({ error: "Error fetching webhooks", details: error });
   }
 };
-
 // Controller function to get all webhooks
 export const getAllWebhooks = async (req, res) => {
   try {
